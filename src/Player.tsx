@@ -39,12 +39,11 @@ const directionsToRadian = (keys: Array<string>): number | null => {
     return null;
   }
 
-  // Cheating a bit, because 0/-1 makes the player move forward
-  if (adjacent === -1 && opposite === 0) {
-    return -Math.PI;
-  }
-
-  return Math.atan(opposite / adjacent);
+  return (
+    Math.atan(opposite / adjacent) -
+    // If we go backward, we subtract Math.PI
+    (adjacent === -1 ? Math.PI : 0)
+  );
 };
 
 const Player = () => {
