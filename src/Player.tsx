@@ -55,7 +55,7 @@ const Player = () => {
     height: 1.8,
     acceleration: 0.35,
     deceleration: 0.5,
-    runningSpeed: 2.6,
+    runningSpeed: 3.8,
     rotationSpeed: Math.PI * 4,
     momentum: {
       direction: 0,
