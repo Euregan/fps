@@ -7,7 +7,7 @@ const Level = () => {
     depth: 20,
   };
 
-  const boxCount = 10;
+  const boxCount = 20;
 
   const boxes = useMemo(
     () =>
@@ -38,7 +38,7 @@ const Level = () => {
       </mesh>
 
       {boxes.map((box, index) => (
-        <mesh key={index} position={box} castShadow>
+        <mesh key={index} position={box} castShadow receiveShadow>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color={0x0000ff} />
         </mesh>

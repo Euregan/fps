@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useRef, useEffect } from "react";
 import { Vector3, Euler } from "three";
 import type { Object3D } from "three";
+import { easeOutExpo, reverseEaseOutExpo } from "./easing";
 
 const settings = {
   sensibility: 1.5,
@@ -14,13 +15,49 @@ const settings = {
   },
 };
 
+const directionsToRadian = (keys: Array<string>): number | null => {
+  const lengths: Array<[number, number]> = keys.map((key) => {
+    switch (key) {
+      case settings.controls.forward:
+        return [1, 0];
+      case settings.controls.backward:
+        return [-1, 0];
+      case settings.controls.left:
+        return [0, 1];
+      case settings.controls.right:
+        return [0, -1];
+      default:
+        return [0, 0];
+    }
+  });
+  const [adjacent, opposite] = lengths.reduce(
+    ([advance, strafe], [adv, str]) => [advance + adv, strafe + str],
+    [0, 0]
+  );
+
+  if (adjacent === 0 && opposite === 0) {
+    return null;
+  }
+
+  // Cheating a bit, because 0/-1 makes the player move forward
+  if (adjacent === -1 && opposite === 0) {
+    return -Math.PI;
+  }
+
+  return Math.atan(opposite / adjacent);
+};
+
 const Player = () => {
+  // All sizes are in m
+  // All durations are in s
+  // All speeds are in m/s
+  // All accelerations are in m/s/s
   const { current: player } = useRef({
-    height: 0.8,
-    speed: 3.5,
-    acceleration: 0.0035,
-    deceleration: 0.005,
-    runningSpeed: 0.005,
+    height: 1.8,
+    acceleration: 0.35,
+    deceleration: 0.5,
+    runningSpeed: 2.6,
+    rotationSpeed: Math.PI * 4,
     momentum: {
       direction: 0,
       speed: 0,
@@ -53,7 +90,11 @@ const Player = () => {
     document.addEventListener("mousemove", onMouseMove);
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (document.pointerLockElement === document.body) {
+      if (
+        document.pointerLockElement === document.body &&
+        // For some reason, the event happens even when the key is already pressed
+        !player.keysPressed.includes(event.key.toUpperCase())
+      ) {
         player.keysPressed.push(event.key.toUpperCase());
       }
     };
@@ -81,23 +122,31 @@ const Player = () => {
 
   useFrame((state, delta) => {
     if (camera.current) {
-      // Changing the player's position based on the key pressed
-      if (player.keysPressed.includes(settings.controls.forward)) {
-        player.position.z -= player.speed * delta * Math.cos(player.rotation.y);
-        player.position.x -= player.speed * delta * Math.sin(player.rotation.y);
+      // Changing the player's momentum based on the key pressed
+      const direction = directionsToRadian(player.keysPressed);
+      if (direction !== null) {
+        player.momentum.speed =
+          easeOutExpo(
+            reverseEaseOutExpo(player.momentum.speed / player.runningSpeed) +
+              player.acceleration
+          ) * player.runningSpeed;
+
+        player.momentum.direction = player.rotation.y + direction;
+      } else {
+        player.momentum.speed = Math.max(
+          0,
+          easeOutExpo(
+            reverseEaseOutExpo(player.momentum.speed / player.runningSpeed) -
+              player.deceleration
+          ) * player.runningSpeed
+        );
       }
-      if (player.keysPressed.includes(settings.controls.backward)) {
-        player.position.z += player.speed * delta * Math.cos(player.rotation.y);
-        player.position.x += player.speed * delta * Math.sin(player.rotation.y);
-      }
-      if (player.keysPressed.includes(settings.controls.left)) {
-        player.position.z += player.speed * delta * Math.sin(player.rotation.y);
-        player.position.x -= player.speed * delta * Math.cos(player.rotation.y);
-      }
-      if (player.keysPressed.includes(settings.controls.right)) {
-        player.position.z -= player.speed * delta * Math.sin(player.rotation.y);
-        player.position.x += player.speed * delta * Math.cos(player.rotation.y);
-      }
+
+      // Updating the player position based on their momentum
+      player.position.z -=
+        player.momentum.speed * delta * Math.cos(player.momentum.direction);
+      player.position.x -=
+        player.momentum.speed * delta * Math.sin(player.momentum.direction);
 
       // Updating the camera position
       camera.current.position.set(
