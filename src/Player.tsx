@@ -99,7 +99,6 @@ const Player = () => {
         player.position.x += player.speed * delta * Math.cos(player.rotation.y);
       }
 
-      console.log(player.position.x, player.position.z);
       // Updating the camera position
       camera.current.position.set(
         player.position.x,

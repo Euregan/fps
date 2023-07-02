@@ -25,15 +25,20 @@ const Level = () => {
   return (
     <group>
       <ambientLight intensity={0.2} />
-      <pointLight position={[0, 3, 0]} intensity={0.7} />
+      <pointLight
+        args={[0xffffff, 0.7, Math.min(floorSize.width, floorSize.depth) / 1.5]}
+        position={[0, 3, 0]}
+        intensity={0.9}
+        castShadow
+      />
 
-      <mesh rotation={new Euler(-Math.PI / 2)}>
+      <mesh rotation={new Euler(-Math.PI / 2)} receiveShadow>
         <planeGeometry args={[floorSize.width, floorSize.depth]} />
         <meshStandardMaterial color={0xffffff} />
       </mesh>
 
       {boxes.map((box, index) => (
-        <mesh key={index} position={box}>
+        <mesh key={index} position={box} castShadow>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color={0x0000ff} />
         </mesh>

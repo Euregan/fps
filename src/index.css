@@ -1,5 +1,6 @@
 body {
   all: unset;
+  background: black;
 }
 
 #root {
