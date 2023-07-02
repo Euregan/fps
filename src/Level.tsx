@@ -24,12 +24,16 @@ const Level = () => {
 
   return (
     <group>
+      <ambientLight intensity={0.2} />
+      <pointLight position={[0, 3, 0]} intensity={0.7} />
+
       <mesh rotation={new Euler(-Math.PI / 2)}>
         <planeGeometry args={[floorSize.width, floorSize.depth]} />
         <meshStandardMaterial color={0xffffff} />
       </mesh>
-      {boxes.map((box) => (
-        <mesh position={box}>
+
+      {boxes.map((box, index) => (
+        <mesh key={index} position={box}>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color={0x0000ff} />
         </mesh>
