@@ -17,8 +17,7 @@ const settings = {
 const Player = () => {
   const { current: player } = useRef({
     height: 0.8,
-    // This is going to be multiplied by the delta, so we keep it small
-    speed: 0.005,
+    speed: 3.5,
     acceleration: 0.0035,
     deceleration: 0.005,
     runningSpeed: 0.005,
@@ -51,14 +50,30 @@ const Player = () => {
         );
       }
     };
-
     document.addEventListener("mousemove", onMouseMove);
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (document.pointerLockElement === document.body) {
+        player.keysPressed.push(event.key.toUpperCase());
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (document.pointerLockElement === document.body) {
+        player.keysPressed = player.keysPressed.filter(
+          (key) => key !== event.key.toUpperCase()
+        );
+      }
+    };
+    document.addEventListener("keyup", onKeyUp);
 
     return () => {
       document.removeEventListener("mousemove", onMouseMove);
-
       document.removeEventListener("click", onDocumentClick);
       document.removeEventListener("pointerlockchange", onPointerLockChange);
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keyup", onKeyUp);
     };
   }, []);
 
@@ -66,6 +81,33 @@ const Player = () => {
 
   useFrame((state, delta) => {
     if (camera.current) {
+      // Changing the player's position based on the key pressed
+      if (player.keysPressed.includes(settings.controls.forward)) {
+        player.position.z -= player.speed * delta * Math.cos(player.rotation.y);
+        player.position.x -= player.speed * delta * Math.sin(player.rotation.y);
+      }
+      if (player.keysPressed.includes(settings.controls.backward)) {
+        player.position.z += player.speed * delta * Math.cos(player.rotation.y);
+        player.position.x += player.speed * delta * Math.sin(player.rotation.y);
+      }
+      if (player.keysPressed.includes(settings.controls.left)) {
+        player.position.z += player.speed * delta * Math.sin(player.rotation.y);
+        player.position.x -= player.speed * delta * Math.cos(player.rotation.y);
+      }
+      if (player.keysPressed.includes(settings.controls.right)) {
+        player.position.z -= player.speed * delta * Math.sin(player.rotation.y);
+        player.position.x += player.speed * delta * Math.cos(player.rotation.y);
+      }
+
+      console.log(player.position.x, player.position.z);
+      // Updating the camera position
+      camera.current.position.set(
+        player.position.x,
+        player.position.y + player.height,
+        player.position.z
+      );
+
+      // Updating the camera rotation
       camera.current.rotation.set(
         player.rotation.x,
         player.rotation.y,
